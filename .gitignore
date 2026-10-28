@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.env*
+!.env.example
+.DS_Store
+.build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+watch/Config.xcconfig
+coverage/
+*.tsbuildinfo
