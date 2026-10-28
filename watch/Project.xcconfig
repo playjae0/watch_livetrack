@@ -1,0 +1,4 @@
+SLASH = /
+SUPABASE_FUNCTIONS_URL = https:$(SLASH)$(SLASH)PROJECT.supabase.co/functions/v1
+PRODUCT_BUNDLE_IDENTIFIER = com.example.MarathonLiveTracker
+#include? "Config.xcconfig"

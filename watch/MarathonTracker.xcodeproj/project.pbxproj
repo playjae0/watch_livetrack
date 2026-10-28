@@ -1,0 +1,30 @@
+// !$*UTF8*$!
+{ archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
+000000000000000000000064 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+0000000000000000000000C8 = { isa = PBXBuildFile; fileRef = 000000000000000000000064; };
+000000000000000000000065 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
+0000000000000000000000C9 = { isa = PBXBuildFile; fileRef = 000000000000000000000065; };
+000000000000000000000066 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarathonTrackerApp.swift; sourceTree = "<group>"; };
+0000000000000000000000CA = { isa = PBXBuildFile; fileRef = 000000000000000000000066; };
+000000000000000000000067 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tracker.swift; sourceTree = "<group>"; };
+0000000000000000000000CB = { isa = PBXBuildFile; fileRef = 000000000000000000000067; };
+000000000000000000000068 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingCore.swift; sourceTree = "<group>"; };
+0000000000000000000000CC = { isa = PBXBuildFile; fileRef = 000000000000000000000068; };
+00000000000000000000000A = { isa = PBXFileReference; explicitFileType = wrapper.application; path = MarathonTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
+00000000000000000000000B = { isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Project.xcconfig; sourceTree = "<group>"; };
+00000000000000000000000C = { isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+000000000000000000000001 = { isa = PBXGroup; children = (000000000000000000000002,000000000000000000000003,00000000000000000000000B); sourceTree = "<group>"; };
+000000000000000000000002 = { isa = PBXGroup; children = (000000000000000000000064,000000000000000000000065,000000000000000000000066,000000000000000000000067,000000000000000000000068,00000000000000000000000C); path = MarathonTracker; sourceTree = "<group>"; };
+000000000000000000000003 = { isa = PBXGroup; children = (00000000000000000000000A); name = Products; sourceTree = "<group>"; };
+000000000000000000000014 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (0000000000000000000000C8,0000000000000000000000C9,0000000000000000000000CA,0000000000000000000000CB,0000000000000000000000CC); runOnlyForDeploymentPostprocessing = 0; };
+000000000000000000000015 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+000000000000000000000016 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+00000000000000000000001E = { isa = PBXNativeTarget; buildConfigurationList = 000000000000000000000029; buildPhases = (000000000000000000000014,000000000000000000000015,000000000000000000000016); buildRules = (); dependencies = (); name = MarathonTracker; productName = MarathonTracker; productReference = 00000000000000000000000A; productType = "com.apple.product-type.application"; };
+00000000000000000000001F = { isa = PBXProject; attributes = { LastUpgradeCheck = 1600; TargetAttributes = { 00000000000000000000001E = { CreatedOnToolsVersion = 16.0; SystemCapabilities = { com.apple.BackgroundModes = { enabled = 1; }; }; }; }; }; buildConfigurationList = 000000000000000000000028; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; knownRegions = (en,Base); mainGroup = 000000000000000000000001; productRefGroup = 000000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (00000000000000000000001E); };
+000000000000000000000032 = { isa = XCBuildConfiguration; buildSettings = { CLANG_ENABLE_MODULES = YES; SDKROOT = watchos; WATCHOS_DEPLOYMENT_TARGET = 11.0; SWIFT_VERSION = 6.0; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }; name = Debug; };
+000000000000000000000033 = { isa = XCBuildConfiguration; buildSettings = { CLANG_ENABLE_MODULES = YES; SDKROOT = watchos; WATCHOS_DEPLOYMENT_TARGET = 11.0; SWIFT_VERSION = 6.0; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_OPTIMIZATION_LEVEL = "-O"; }; name = Release; };
+000000000000000000000034 = { isa = XCBuildConfiguration; baseConfigurationReference = 00000000000000000000000B; buildSettings = { CODE_SIGN_STYLE = Automatic; INFOPLIST_FILE = MarathonTracker/Info.plist; GENERATE_INFOPLIST_FILE = NO; PRODUCT_NAME = "$(TARGET_NAME)"; TARGETED_DEVICE_FAMILY = 4; SDKROOT = watchos; SUPPORTED_PLATFORMS = "watchos watchsimulator"; WATCHOS_DEPLOYMENT_TARGET = 11.0; SKIP_INSTALL = NO; SWIFT_VERSION = 6.0; }; name = Debug; };
+000000000000000000000035 = { isa = XCBuildConfiguration; baseConfigurationReference = 00000000000000000000000B; buildSettings = { CODE_SIGN_STYLE = Automatic; INFOPLIST_FILE = MarathonTracker/Info.plist; GENERATE_INFOPLIST_FILE = NO; PRODUCT_NAME = "$(TARGET_NAME)"; TARGETED_DEVICE_FAMILY = 4; SDKROOT = watchos; SUPPORTED_PLATFORMS = "watchos watchsimulator"; WATCHOS_DEPLOYMENT_TARGET = 11.0; SKIP_INSTALL = NO; SWIFT_VERSION = 6.0; }; name = Release; };
+000000000000000000000028 = { isa = XCConfigurationList; buildConfigurations = (000000000000000000000032,000000000000000000000033); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+000000000000000000000029 = { isa = XCConfigurationList; buildConfigurations = (000000000000000000000034,000000000000000000000035); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+}; rootObject = 00000000000000000000001F; }
