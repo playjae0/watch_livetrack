@@ -40,8 +40,9 @@ try{
  await expect.poll(async()=>{try{return (await fetch(origin)).status;}catch{return 0;}},{timeout:30000}).toBe(200);
  browser=await chromium.launch({headless:true});const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const page=await context.newPage();
  const browserErrors:string[]=[];page.on('pageerror',e=>browserErrors.push(e.message));
+ await request('set-waiting-point',view,{latitude:0.001,longitude:0.001});
  const pageResponse=await page.goto(`${origin}/track#${view}`);
- await expect(page.getByRole('heading',{name:'Not sharing',exact:true})).toBeVisible();await expect(page.getByText('Test course · planned course')).toBeVisible();
+ await expect(page.getByRole('heading',{name:'공유 중 아님',exact:true})).toBeVisible();await expect(page.getByText('Test course · 예정 코스')).toBeVisible();
  const publicCourse=await fetch(`${origin}/api/course`);assert.equal(publicCourse.status,401);
  assert.equal(page.url(),`${origin}/track`);assert.equal(pageResponse?.headers()['referrer-policy'],'no-referrer');assert.match(pageResponse?.headers()['cache-control']??'',/no-store/);
  const cookie=(await context.cookies()).find(c=>c.name==='tracker_view');assert.ok(cookie?.httpOnly&&cookie.secure&&cookie.sameSite==='Strict');assert.ok(!cookie.value.includes(view));
@@ -50,19 +51,21 @@ try{
  const {session_id}=await request('start-session',device);
  const p={id:randomUUID(),seq:0,latitude:0,longitude:0,horizontal_accuracy_m:10,recorded_at:new Date().toISOString()};
  await request('ingest-location',device,{session_id,points:[p,{...p,id:randomUUID(),seq:1,longitude:0.0001,recorded_at:new Date(Date.now()+500).toISOString()}]});
- await expect(page.getByRole('heading',{name:'Location sharing',exact:true})).toBeVisible({timeout:18000});
- await expect(page.getByRole('status')).toContainText('Last observed location');
- const map=page.getByLabel('Runner location and route. Tap to set one family waiting point.');await expect(map).toBeVisible();
- const box=await map.boundingBox();assert.ok(box);await map.tap({position:{x:box.width/2+35,y:box.height/2}});
- await expect(page.getByRole('button',{name:'Clear point'})).toBeEnabled();
+ await expect(page.getByRole('heading',{name:'위치 공유 중',exact:true})).toBeVisible({timeout:18000});
+ await expect(page.getByRole('status')).toContainText('마지막 측정 위치');
+ const map=page.getByLabel('주자 위치와 경로. 탭해서 가족 응원 위치를 하나 지정하세요.');await expect(map).toBeVisible();
+ const runner=page.locator('.runner-marker'),family=page.locator('.waiting-marker');await expect(runner).toBeVisible();await expect(family).toBeVisible();
+ const box=await map.boundingBox();assert.ok(box);
+ await expect.poll(async()=>{const a=await runner.boundingBox(),b=await family.boundingBox();if(!a||!b)return false;const inside=(v:typeof a)=>v.x>=box.x&&v.y>=box.y&&v.x+v.width<=box.x+box.width&&v.y+v.height<=box.y+box.height;return inside(a)&&inside(b)&&Math.hypot(a.x-b.x,a.y-b.y)>15;}).toBe(true);await map.tap({position:{x:box.width/2+35,y:box.height/2}});
+ await expect(page.getByRole('button',{name:'위치 지우기'})).toBeEnabled();
  let piggy=await request('ingest-location',device,{session_id,points:[p]});assert.ok(piggy.waiting_point);assert.notEqual(piggy.waiting_point.longitude,0);
- const clearResponse=page.waitForResponse(r=>r.url().endsWith('/api/waiting-point')&&r.request().method()==='POST');await page.getByRole('button',{name:'Clear point'}).click();assert.equal((await clearResponse).status(),200);await expect(page.getByRole('button',{name:'Clear point'})).toBeDisabled();piggy=await request('ingest-location',device,{session_id,points:[p]});assert.equal(piggy.waiting_point,null);
- await db.query("update location_points set recorded_at=now()-interval '91 seconds'");await page.reload();await expect(page.getByRole('status')).toContainText('Stale location');await expect(map).toBeVisible();await expect(page.locator('.leaflet-interactive')).toHaveCount(3);
+ const clearResponse=page.waitForResponse(r=>r.url().endsWith('/api/waiting-point')&&r.request().method()==='POST');await page.getByRole('button',{name:'위치 지우기'}).click();assert.equal((await clearResponse).status(),200);await expect(page.getByRole('button',{name:'위치 지우기'})).toBeDisabled();piggy=await request('ingest-location',device,{session_id,points:[p]});assert.equal(piggy.waiting_point,null);
+ await db.query("update location_points set recorded_at=now()-interval '91 seconds'");await page.reload();await expect(page.getByRole('status')).toContainText('위치 갱신 지연');await expect(map).toBeVisible();await expect(page.locator('.leaflet-interactive')).toHaveCount(3);
  await mkdir(join(root,'docs/screenshots'),{recursive:true});await page.screenshot({path:join(root,'docs/screenshots/viewer-mock.png'),fullPage:true});
  // Hidden-page visibility handler cancels polling; no synthetic positions are introduced.
  await page.clock.install();await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});const before=reads;await page.clock.fastForward(36000);assert.equal(reads,before);
  await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});await expect.poll(()=>reads).toBeGreaterThan(before);await page.clock.resume();
- await request('stop-session',device,{session_id});await page.reload();await expect(page.getByRole('heading',{name:'Sharing ended',exact:true})).toBeVisible();await expect(page.getByRole('status')).toHaveCount(0);
+ await request('stop-session',device,{session_id});await page.reload();await expect(page.getByRole('heading',{name:'공유 종료',exact:true})).toBeVisible();await expect(page.getByRole('status')).toHaveCount(0);
  assert.deepEqual(browserErrors,[]);assert.ok(!logs.includes(view)&&!logs.includes(device));
  console.log('PASS mock E2E: private fragment exchange, encrypted HttpOnly/Secure cookie, CSRF, lifecycle polling, Leaflet tap/clear, Watch piggyback, stale measurement, hidden-page pause, stop, no secret logs');
 }finally{
