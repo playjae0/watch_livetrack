@@ -15,8 +15,8 @@ struct TrackerView: View {
             VStack(spacing: 10) {
                 if tracker.needsSetup {
                     Text("Device setup").font(.headline)
-                    SecureField("Device credential", text: $credential)
-                    Button("Save credential") { tracker.setup(credential); credential = "" }.frame(minHeight: 48)
+                    TextField("8-digit code", text: $credential)
+                    Button("Connect") { tracker.setup(credential); credential = "" }.frame(minHeight: 48)
                 } else if tracker.running {
                     Text(tracker.boosted ? "Boost · 1 minute" : "Sharing").font(.headline)
                     Button("Boost 1 min") { tracker.boost() }

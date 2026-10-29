@@ -54,10 +54,21 @@ import Network
         let old = Date().timeIntervalSince(waiting.updated_at) > 900 || Date().timeIntervalSince(lastFix.recorded_at) >= 90
         return "\(Int(meters.rounded())) m straight line\(old ? " · old" : "")"
     }
-    func setup(_ credential: String) {
-        guard credential.range(of: "^[A-Za-z0-9_-]{43,128}$", options: .regularExpression) != nil else { status = "Invalid device credential"; return }
-        do { try DeviceKeychain.save(credential); needsSetup = false; status = "Ready" }
-        catch { status = "Could not save credential" }
+    func setup(_ input: String) {
+        let code = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard code.range(of: "^[0-9]{8}$", options: .regularExpression) != nil else { status = "Enter 8-digit code"; return }
+        guard !working else { return }
+        working = true; status = "Connecting…"
+        Task {
+            defer { working = false }
+            do {
+                let reply: EnrollmentReply = try await APIClient.enrollment().post("enroll-device", body: EnrollmentBody(code: code))
+                try DeviceKeychain.save(reply.device_secret)
+                needsSetup = false; status = "Ready"
+            } catch APIError.http(429) { status = "Too many attempts · wait" }
+              catch APIError.http(401) { status = "Code expired or invalid" }
+              catch { status = "Setup failed · try again" }
+        }
     }
     @discardableResult private func persist() -> Bool {
         do { try store.save(saved); return true }

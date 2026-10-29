@@ -26,6 +26,7 @@ supabase functions deploy ingest-location
 supabase functions deploy stop-session
 supabase functions deploy get-track
 supabase functions deploy set-waiting-point
+supabase functions deploy enroll-device
 ```
 
 `supabase/config.toml`의 `verify_jwt = false`는 Supabase 사용자 JWT 대신 함수에서 기기/가족 bearer 비밀을 검증하기 위한 설정입니다. 익명 테이블 접근이나 공개 등록을 허용하지 않습니다. 함수는 Supabase가 제공하는 `SUPABASE_URL`과 레거시 `SUPABASE_SERVICE_ROLE_KEY`를 서버에서만 사용합니다. 프로젝트의 Edge Functions 기본 환경에 이 값이 있는지 확인하세요. 해당 레거시 service-role 키가 비활성화된 프로젝트에서는 재활성화 또는 서버 전용 키 방식 변경이 필요합니다.
@@ -71,7 +72,7 @@ Supabase 프로젝트 URL, **레거시 service-role 키**, Vercel 웹 출처를 
 node --env-file=.env.operator scripts/operator.mjs enroll
 ```
 
-출력되는 `device_id`, `device_secret`, `viewer_link`는 생성 시 한 번만 표시됩니다. 신뢰할 수 있는 안전한 방법으로 별도 보관하고 셸 기록, CI 로그, 스크린샷에 남기지 마세요. 기기 비밀과 가족 링크는 서로 다릅니다. 둘 다 다시 조회할 수 없습니다. 분실한 경우 새 기기를 등록하거나 가족 링크를 회전합니다.
+출력되는 `device_id`, `device_secret`, `viewer_link`는 생성 시 한 번만 표시됩니다. 이 중 긴 `device_secret`은 Watch 화면에 직접 입력하지 않습니다. 기존 소유자 기기의 8자리 등록 코드는 `node scripts/issue-enrollment.mjs`로 발급합니다. 이 명령은 로그인 및 연결된 Supabase CLI와 `~/.config/marathon-livetrack/device-setup.txt`의 기기 ID가 필요하고, 짧은 코드만 별도 비공개 파일에 저장합니다. 신뢰할 수 있는 안전한 방법으로 별도 보관하고 셸 기록, CI 로그, 스크린샷에 남기지 마세요. 기기 비밀과 가족 링크는 서로 다릅니다. 둘 다 다시 조회할 수 없습니다. 분실한 경우 새 기기를 등록하거나 가족 링크를 회전합니다.
 
 ```sh
 node --env-file=.env.operator scripts/operator.mjs rotate-view DEVICE_UUID
@@ -84,7 +85,7 @@ node --env-file=.env.operator scripts/operator.mjs revoke DEVICE_UUID
 
 1. `watch/Config.example.xcconfig`를 `watch/Config.xcconfig`로 복사하고 실제 `SUPABASE_FUNCTIONS_URL`, 개발자 팀, 고유 Bundle ID를 설정합니다. `Config.xcconfig`는 Git에서 제외됩니다. URL은 `https:$(SLASH)$(SLASH)PROJECT.supabase.co/functions/v1` 형태를 유지합니다.
 2. `watch/MarathonTracker.xcodeproj`를 Xcode에서 열고 서명 팀 및 실제 Watch 대상을 선택합니다. 필요 시 Xcode의 Signing & Capabilities에서 Background Modes → Location updates가 활성화되었는지 확인합니다. Info.plist의 `UIBackgroundModes`에 `location`이 선언되어 있습니다.
-3. Watch에 설치하고 처음 표시되는 설정 화면에 **기기 비밀**을 입력합니다. 기기 비밀은 Keychain의 기기 전용 항목에 저장되며 앱 번들에 포함하지 않습니다.
+3. Watch에 설치하고 운영자가 `node scripts/issue-enrollment.mjs`로 발급한 **8자리 일회용 코드**를 입력하고 Connect를 누릅니다. 코드는 10분 동안 한 번 사용 가능하며, 서버는 입력 횟수를 제한합니다. 실제 긴 기기 비밀은 자동 생성되어 Keychain의 기기 전용 항목에 저장됩니다. 코드가 만료되거나 응답을 받지 못한 경우 운영자가 새 코드를 발급합니다.
 4. `Start sharing`을 누르고 위치 사용을 허용합니다. 권한 대화상자가 닫힌 뒤 다시 `Start sharing`을 누릅니다. 기존 저장 세션은 자동으로 실행 중이라고 표시하지 않으며 `Resume sharing`을 눌러야 합니다.
 5. 가족이 저장한 링크를 열고 지도를 탭하면 대기 지점이 하나 설정됩니다. Watch는 다음 성공적인 시작/업로드 응답에서 지점 변경 또는 삭제를 받습니다. 거리는 GPS와 지점 사이 **직선 거리**이며 오래된 지점 또는 GPS는 `old`로 표시합니다.
 6. `Boost 1 min`은 새 GPS 관측을 요청하고 대기 중 좌표를 즉시 전송 시도하며 60초 동안 5초 주기를 목표로 합니다. 다시 누르면 60초가 연장됩니다. 햅틱은 버튼 입력만 확인합니다. `Last upload`은 서버 응답을 받은 시각이며 관측 시각과 다릅니다. `Stop sharing`은 로컬 위치 수집을 중지하고 서버 중지를 시도합니다. 오프라인이면 `Retry stop` 상태가 저장됩니다.

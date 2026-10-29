@@ -14,6 +14,8 @@ struct UploadReply: Decodable {
     let server_time: Date
 }
 struct StopReply: Decodable { let status: String }
+struct EnrollmentBody: Encodable { let code: String }
+struct EnrollmentReply: Decodable { let device_secret: String }
 struct StartBody: Encodable {}
 struct UploadBody: Encodable { let session_id: UUID; let points: [GPSPoint] }
 struct StopBody: Encodable { let session_id: UUID }
@@ -21,6 +23,11 @@ enum APIError: Error { case configuration, credential, http(Int), invalidRespons
 struct APIClient: Sendable {
     let baseURL: URL
     let credential: String
+    static func enrollment() throws -> APIClient {
+        guard let raw = Bundle.main.object(forInfoDictionaryKey: "SupabaseFunctionsURL") as? String,
+              let url = URL(string: raw), url.scheme == "https", url.host != nil else { throw APIError.configuration }
+        return APIClient(baseURL: url, credential: "")
+    }
     static func configured() throws -> APIClient {
         guard let raw = Bundle.main.object(forInfoDictionaryKey: "SupabaseFunctionsURL") as? String,
               let url = URL(string: raw), url.scheme == "https", url.host != nil else { throw APIError.configuration }
@@ -31,7 +38,7 @@ struct APIClient: Sendable {
         var request = URLRequest(url: baseURL.appendingPathComponent(endpoint))
         request.httpMethod = "POST"
         request.timeoutInterval = 25
-        request.setValue("Bearer \(credential)", forHTTPHeaderField: "Authorization")
+        if !credential.isEmpty { request.setValue("Bearer \(credential)", forHTTPHeaderField: "Authorization") }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
         request.httpBody = try encoder.encode(body)

@@ -14,7 +14,7 @@ async function call(action:string,token:string,body:unknown={}){
  const r=await run(new Request(`https://mock.test/${action}${action==='get-track'&&typeof body==='object'&&body&&'cursor'in body?'?cursor='+String(body.cursor):''}`,{method:action==='get-track'?'GET':'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:action==='get-track'?undefined:JSON.stringify(body)}));return {status:r.status,data:await r.json()};
 }
 const point=(seq=0,extra:Record<string,unknown>={})=>({id:randomUUID(),seq,latitude:0,longitude:0,horizontal_accuracy_m:10,recorded_at:new Date().toISOString(),...extra});
-before(async()=>{if(!db)return;await db.query("create role anon;create role authenticated;create role service_role;");await db.query(await readFile(new URL('../supabase/migrations/202610280001_tracker.sql',import.meta.url),'utf8'));for(const [d,v]of [[device,viewer],[other,otherView]]){const r=await db.query('insert into devices(device_secret_hash,view_token_hash) values($1,$2) returning id',[await sha256(d),await sha256(v)]);if(d===device)deviceID=r.rows[0].id;}});
+before(async()=>{if(!db)return;await db.query("create role anon;create role authenticated;create role service_role;");await db.query(await readFile(new URL('../supabase/migrations/202610280001_tracker.sql',import.meta.url),'utf8'));await db.query(await readFile(new URL('../supabase/migrations/202610300001_enrollment.sql',import.meta.url),'utf8'));for(const [d,v]of [[device,viewer],[other,otherView]]){const r=await db.query('insert into devices(device_secret_hash,view_token_hash) values($1,$2) returning id',[await sha256(d),await sha256(v)]);if(d===device)deviceID=r.rows[0].id;}});
 after(async()=>{await db?.end();});
 test('A01–A07, A10, A12, A14: transactional API lifecycle and privacy',{skip:!db},async()=>{
  assert.equal((await call('get-track',viewer)).data.status,'not_sharing');
@@ -70,3 +70,18 @@ test('expiry, cleanup, rate limit and atomic batch rollback',{skip:!db},async()=
 });
 
 test('A01: operator CLI refuses enrollment without server credential',()=>{const r=spawnSync(process.execPath,['scripts/operator.mjs','enroll'],{env:{},encoding:'utf8'});assert.notEqual(r.status,0);assert.equal(r.stdout,'');assert.match(r.stderr,/operator-only/);});
+
+test('one-time enrollment: guarded, single-use, expires and rate limits', {skip:!db}, async()=>{
+ const row=await db!.query('select id from devices where device_secret_hash=$1',[await sha256(other)]);const id=row.rows[0].id;
+ const code='12345678',codeHash=await sha256(code),secret=secretForTest();
+ await db!.query("insert into enrollment_codes(code_hash,device_id,expires_at) values($1,$2,now()+interval '10 minutes')",[codeHash,id]);
+ const redeem=async(c:string)=> (await db!.query('select redeem_enrollment($1,$2) as result',[await sha256(c),await sha256(secret)])).rows[0].result;
+ assert.equal((await redeem('00000000'))._status,401);
+ assert.equal((await redeem(code)).ok,true);
+ assert.equal((await redeem(code))._status,401);
+ assert.equal((await db!.query('select device_secret_hash from devices where id=$1',[id])).rows[0].device_secret_hash,await sha256(secret));
+ const client=await db!.connect();try{await client.query('set role anon');await assert.rejects(client.query("select redeem_enrollment('a','b')"),{code:'42501'});}finally{await client.query('reset role');client.release();}
+ await db!.query("insert into enrollment_codes(code_hash,device_id,expires_at) values($1,$2,now()-interval '1 second')",[await sha256('87654321'),id]);
+ assert.equal((await redeem('87654321'))._status,401);await redeem('00000002');assert.equal((await redeem('00000003'))._status,429);
+});
+function secretForTest(){return randomBytes(32).toString('base64url');}
