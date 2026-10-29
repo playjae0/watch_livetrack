@@ -11,3 +11,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.enroll-device]
 verify_jwt = false
+[functions.get-course]
+verify_jwt = false

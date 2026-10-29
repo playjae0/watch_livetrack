@@ -6,7 +6,7 @@ export async function sha256(value: string): Promise<string> {
 export function handler(action: string, rpc: RPC) {
  return async (request: Request): Promise<Response> => {
   const reply=(status:number,body:unknown)=>new Response(JSON.stringify(body),{status,headers});
-  if(request.method!==(action==='get-track'?'GET':'POST')) return reply(405,{error:'Method not allowed'});
+  if(request.method!==((action==='get-track'||action==='get-course')?'GET':'POST')) return reply(405,{error:'Method not allowed'});
   const token=request.headers.get('authorization')?.match(/^Bearer ([A-Za-z0-9_-]{43,128})$/)?.[1];
   if(!token) return reply(401,{error:'Credential required'});
   try {

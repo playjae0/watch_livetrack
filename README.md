@@ -119,3 +119,13 @@ xcodebuild -project watch/MarathonTracker.xcodeproj -scheme MarathonTracker -des
 ```
 
 테스트 결과와 환경 제한은 [docs/VALIDATION.md](docs/VALIDATION.md), 실제 Series 10 Cellular에서 실행할 절차와 기록표는 [docs/HARDWARE_TESTS.md](docs/HARDWARE_TESTS.md)에 있습니다. 실제 기기 시험을 통과하기 전에는 대회 사용 준비가 완료된 것으로 간주하지 않습니다.
+
+## GPX 예정 코스
+
+가족 웹 지도는 선택적으로 기기별 예정 코스 하나를 보라색 점선으로 표시합니다. 실제 이동 경로는 파란색입니다. GPX 위치 데이터는 RLS가 적용된 서버 DB에 보관되며 유효한 가족 링크를 가진 사용자에게만 제공됩니다. 원본 GPX는 저장소에 커밋하지 않습니다. 연결된 Supabase 프로젝트와 운영자의 `device-setup.txt`가 준비된 경우 코스를 교체하려면 다음을 실행합니다.
+
+```sh
+python3 scripts/set-course.py /path/to/course.gpx
+```
+
+현재 도구는 GPX 1.1의 트랙 세그먼트(`trkseg`/`trkpt`)를 가져옵니다. Watch 지도는 추가하지 않습니다.

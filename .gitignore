@@ -10,3 +10,7 @@ xcuserdata/
 watch/Config.xcconfig
 coverage/
 *.tsbuildinfo
+.vercel
+supabase/.temp/
+*.gpx
+*.GPX

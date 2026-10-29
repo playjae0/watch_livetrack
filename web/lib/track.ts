@@ -1,4 +1,5 @@
 export interface Point {id:string;seq:number;latitude:number;longitude:number;recorded_at:string;received_at:string;arrival:number;horizontal_accuracy_m:number}
+export interface Course {name:string;segments:[number,number][][]}
 export interface Waiting {latitude:number;longitude:number;updated_at:string}
 export interface Track {status:'active'|'not_sharing'|'stopped'|'expired';session_id:string|null;latest:Point|null;route:Point[];waiting_point:Waiting|null;next_cursor?:number;has_more?:boolean;server_time:string;last_received_at:string|null}
 export function isStale(point:Point|null,now=Date.now()){return !point||now-Date.parse(point.recorded_at)>=90000;}

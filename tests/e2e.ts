@@ -22,10 +22,10 @@ try{
  command(`${pgBin}/initdb`,['-D',join(dir,'db'),'-A','trust','--no-locale','--encoding=UTF8']);
  command(`${pgBin}/pg_ctl`,['-D',join(dir,'db'),'-l',join(dir,'pg.log'),'-o',`-p ${pgPort} -h 127.0.0.1`,'-w','start']);started=true;
  db=new pg.Pool({connectionString:`postgres://127.0.0.1:${pgPort}/postgres`});
- await db.query('create role anon;create role authenticated;create role service_role;');await db.query(await readFile(join(root,'supabase/migrations/202610280001_tracker.sql'),'utf8'));
- await db.query('insert into devices(device_secret_hash,view_token_hash) values($1,$2)',[await sha256(device),await sha256(view)]);
- const rpc=async(action:string,hash:string,body:Record<string,unknown>)=>{try{const r=await db!.query('select tracker_request($1,$2,$3) as data',[action,hash,body]);return {data:r.rows[0].data};}catch(e){return {error:{code:(e as {code:string}).code}};}};
- const request=async(action:string,token:string,body:Record<string,unknown>={})=>{const r=await handler(action,rpc)(new Request(`https://localhost/${action}`,{method:action==='get-track'?'GET':'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:action==='get-track'?undefined:JSON.stringify(body)}));assert.equal(r.status,200);return r.json();};
+ await db.query('create role anon;create role authenticated;create role service_role;');await db.query(await readFile(join(root,'supabase/migrations/202610280001_tracker.sql'),'utf8'));await db.query(await readFile(join(root,'supabase/migrations/202610300003_course.sql'),'utf8'));
+ const deviceRow=await db.query('insert into devices(device_secret_hash,view_token_hash) values($1,$2) returning id',[await sha256(device),await sha256(view)]);await db.query('insert into courses(device_id,course) values($1,$2)',[deviceRow.rows[0].id,{name:'Test course',segments:[[[0,0],[0.01,0.01]]]}]);
+ const rpc=async(action:string,hash:string,body:Record<string,unknown>)=>{try{const r=action==='get-course'?await db!.query('select read_course($1) as data',[hash]):await db!.query('select tracker_request($1,$2,$3) as data',[action,hash,body]);return {data:r.rows[0].data};}catch(e){return {error:{code:(e as {code:string}).code}};}};
+ const request=async(action:string,token:string,body:Record<string,unknown>={})=>{const r=await handler(action,rpc)(new Request(`https://localhost/${action}`,{method:action==='get-track'||action==='get-course'?'GET':'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:action==='get-track'||action==='get-course'?undefined:JSON.stringify(body)}));assert.equal(r.status,200);return r.json();};
  command('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-keyout',join(dir,'key.pem'),'-out',join(dir,'cert.pem'),'-days','1','-subj','/CN=localhost','-addext','subjectAltName=IP:127.0.0.1,DNS:localhost']);
  edge=createServer({key:await readFile(join(dir,'key.pem')),cert:await readFile(join(dir,'cert.pem'))},async(req,res)=>{
   const action=req.url?.split('?')[0].split('/').at(-1)??'';if(action==='get-track')reads++;
@@ -41,7 +41,8 @@ try{
  browser=await chromium.launch({headless:true});const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});const page=await context.newPage();
  const browserErrors:string[]=[];page.on('pageerror',e=>browserErrors.push(e.message));
  const pageResponse=await page.goto(`${origin}/track#${view}`);
- await expect(page.getByRole('heading',{name:'Not sharing',exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Not sharing',exact:true})).toBeVisible();await expect(page.getByText('Test course · planned course')).toBeVisible();
+ const publicCourse=await fetch(`${origin}/api/course`);assert.equal(publicCourse.status,401);
  assert.equal(page.url(),`${origin}/track`);assert.equal(pageResponse?.headers()['referrer-policy'],'no-referrer');assert.match(pageResponse?.headers()['cache-control']??'',/no-store/);
  const cookie=(await context.cookies()).find(c=>c.name==='tracker_view');assert.ok(cookie?.httpOnly&&cookie.secure&&cookie.sameSite==='Strict');assert.ok(!cookie.value.includes(view));
  // CSRF rejected and session cookie permits reload with no fragment.
@@ -56,7 +57,7 @@ try{
  await expect(page.getByRole('button',{name:'Clear point'})).toBeEnabled();
  let piggy=await request('ingest-location',device,{session_id,points:[p]});assert.ok(piggy.waiting_point);assert.notEqual(piggy.waiting_point.longitude,0);
  const clearResponse=page.waitForResponse(r=>r.url().endsWith('/api/waiting-point')&&r.request().method()==='POST');await page.getByRole('button',{name:'Clear point'}).click();assert.equal((await clearResponse).status(),200);await expect(page.getByRole('button',{name:'Clear point'})).toBeDisabled();piggy=await request('ingest-location',device,{session_id,points:[p]});assert.equal(piggy.waiting_point,null);
- await db.query("update location_points set recorded_at=now()-interval '91 seconds'");await page.reload();await expect(page.getByRole('status')).toContainText('Stale location');await expect(map).toBeVisible();await expect(page.locator('.leaflet-interactive')).toHaveCount(2);
+ await db.query("update location_points set recorded_at=now()-interval '91 seconds'");await page.reload();await expect(page.getByRole('status')).toContainText('Stale location');await expect(map).toBeVisible();await expect(page.locator('.leaflet-interactive')).toHaveCount(3);
  await mkdir(join(root,'docs/screenshots'),{recursive:true});await page.screenshot({path:join(root,'docs/screenshots/viewer-mock.png'),fullPage:true});
  // Hidden-page visibility handler cancels polling; no synthetic positions are introduced.
  await page.clock.install();await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));});const before=reads;await page.clock.fastForward(36000);assert.equal(reads,before);
