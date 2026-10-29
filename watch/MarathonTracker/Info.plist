@@ -10,7 +10,6 @@
 <key>CFBundleVersion</key><string>1</string>
 <key>WKApplication</key><true/>
 <key>WKWatchOnly</key><true/>
-<key>WKRunsIndependentlyOfCompanionApp</key><true/>
 <key>UIBackgroundModes</key><array><string>location</string></array>
 <key>NSLocationWhenInUseUsageDescription</key><string>Share your running location with family using your private link, including while the display sleeps.</string>
 <key>SupabaseFunctionsURL</key><string>$(SUPABASE_FUNCTIONS_URL)</string>
