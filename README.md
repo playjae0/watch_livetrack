@@ -1,6 +1,6 @@
 # Marathon Live Tracker MVP
 
-Apple Watch Series 10 Cellular가 위치를 Supabase에 전송하고 가족은 비공개 웹 링크에서 현재 관측 위치와 경로를 확인합니다. 승인된 범위는 [SPEC.md](SPEC.md), 테스트 기준은 [TEST_PLAN.md](TEST_PLAN.md)입니다. Watch의 30초/5초 전송과 백그라운드 실행은 목표이며 보장되지 않습니다. 실제 기기 검증 결과는 아직 없습니다.
+Apple Watch Series 10 Cellular가 위치를 Supabase에 전송하고 가족은 비공개 웹 링크에서 현재 관측 위치와 경로를 확인합니다. 승인된 범위는 [SPEC.md](SPEC.md), 테스트 기준은 [TEST_PLAN.md](TEST_PLAN.md)입니다. Watch의 10초/5초 전송과 백그라운드 실행은 목표이며 보장되지 않습니다. 실제 기기 검증 결과는 아직 없습니다.
 
 ## 구성 및 사전 준비
 

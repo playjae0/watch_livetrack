@@ -4,14 +4,14 @@ import Foundation
     static func main() throws {
         let t = Date(timeIntervalSince1970: 10000)
         var policy = UploadPolicy()
-        assert(policy.interval(now: t) == 30)
+        assert(policy.interval(now: t) == 10)
         policy.lastAttempt = t
-        assert(!policy.due(now: t.addingTimeInterval(29)))
-        assert(policy.due(now: t.addingTimeInterval(30)))
+        assert(!policy.due(now: t.addingTimeInterval(9)))
+        assert(policy.due(now: t.addingTimeInterval(10)))
         policy.boost(now: t)
         assert(policy.canAttempt(now: t, force: true)) // immediate queued attempt without fabricating a fix
         assert(policy.interval(now: t.addingTimeInterval(59)) == 5)
-        assert(policy.interval(now: t.addingTimeInterval(60)) == 30)
+        assert(policy.interval(now: t.addingTimeInterval(60)) == 10)
         policy.boost(now: t.addingTimeInterval(59))
         assert(policy.boosted(now: t.addingTimeInterval(100)))
         assert(!policy.boosted(now: t.addingTimeInterval(119)))

@@ -11,12 +11,12 @@ Strictly minimize features, CPU, GPS, LTE wakeups and battery consumption. No ma
 - Idle view: one large "Start sharing" button.
 - Active view: clear status, a **large "Boost 1 min" button**, a separate "Stop sharing" control, and a compact "last upload" indicator. Use large hit targets, high contrast, minimal redraws.
 - Start initiates own Core Location tracking after permission and authenticated session setup. Start does **not** launch or depend on Workout.
-- Normal mode: **target** upload approximately every 30 seconds.
+- Normal mode: **target** upload approximately every 10 seconds.
 - Boost: pressing button immediately requests a fresh position and attempts upload; for **60 seconds**, target uploads every **5 seconds**, then automatically revert to normal. A second press during boost resets the 60-second deadline; do not add a permanent 5-second toggle.
 - Haptic feedback confirms button input, **not server receipt**. Distinguish queued/attempted/successful upload in state; do not misreport delivery.
 - No Watch map. If family has tapped a point on the web map, show **straight-line distance** from the Watch's last valid GPS fix to that family-selected point (e.g. "850 m straight line"). Show "--" until destination/fix exists; if the destination is old or cleared, update accordingly. This is not a route ETA.
 - The Watch only receives selected destination coordinates piggybacked on existing upload/start responses; **no continuous polling** for family coordinates. This means display may lag until a successful request.
-- Tracking persists while screen sleeps **where watchOS permits**, with correct location authorization/background mode/session lifecycle. Actual 5s/30s wall-clock delivery and 4+ hour background execution are **not guaranteed**.
+- Tracking persists while screen sleeps **where watchOS permits**, with correct location authorization/background mode/session lifecycle. Actual 5s/10s wall-clock delivery and 4+ hour background execution are **not guaranteed**.
 - On interrupted network, persist unsent points and retry with backoff; never fabricate new GPS fixes. On relaunch, distinguish saved session from actually running tracking and offer a safe resume path if required.
 
 ### Family web
@@ -58,7 +58,7 @@ Do not trust unverified session IDs, client times, or viewer tokens. Ingest only
 
 ## 7. Network, battery, correctness
 - Location acquisition and network upload are **separate**. Do not power-cycle GPS for each transmission; do not keep a high-frequency timer alive in the background. Rate limit server submissions on location callbacks when possible.
-- Normal target 30s, boost target 5s for 60s only when watchOS allows. No duplicate 'fresh' sample when no new GPS observation. Batch queue and network retries (exponential backoff + jitter).
+- Normal target 10s, boost target 5s for 60s only when watchOS allows. No duplicate 'fresh' sample when no new GPS observation. Batch queue and network retries (exponential backoff + jitter).
 - Minimize full UI updates and haptics; use lightweight JSON. No constant Watch screen-on, no Watch maps.
 - Local queue survives crash/relaunch; cap size and define truncation policy. Track failed/inflight/acked states. Only delete points after server ack. Timestamp and accuracy filtering; do not draw GPS jumps from implausible/invalid samples without documenting policy.
 - Distance calculation uses haversine/Core Location distance on two coordinates, labeled **straight-line**. Display can be stale.
@@ -75,5 +75,5 @@ Never commit real credentials.
 ## 9. Acceptance
 - Mock End-to-End: secure enrollment, session start, ingest with idempotency, viewer path/map, waiting point -> next Watch upload response, boost mode state transition, stop/invalidate flow.
 - Build/typecheck/tests for each available environment.
-- Actual Watch: iPhone left behind, LTE only, watch screen asleep, Workout app both on and off, long-run/battery results tracked separately. No claim of guaranteed 5s/30s or background uptime without hardware evidence.
+- Actual Watch: iPhone left behind, LTE only, watch screen asleep, Workout app both on and off, long-run/battery results tracked separately. No claim of guaranteed 5s/10s or background uptime without hardware evidence.
 - User-facing functionality is limited to this specification; do not add speculative features.

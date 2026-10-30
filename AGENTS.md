@@ -13,7 +13,7 @@ You are implementing the approved **Marathon Live Tracker** MVP. Read SPEC.md an
 ## Non-negotiable rules
 - Standalone Watch app works without iPhone while tracking; no HKWorkoutSession; Apple's Workout app is optional and independent.
 - Watch UX: start, stop, 1-minute boost, compact status and optionally straight-line distance to a manually tapped family waiting point. Large controls + button haptics. No Watch maps, metrics, chat, or other features.
-- Normal upload target 30s; boost target 5s for 60s; return automatically. These are best-effort, NOT guaranteed timers.
+- Normal upload target 10s; boost target 5s for 60s; return automatically. These are best-effort, NOT guaranteed timers.
 - Minimize radio/GPS/CPU/UI/battery use. Buffered/idempotent uploads and eventual retry.
 - Supabase and Vercel deployment only; viewer shows position + traveled route; stable token-protected family link. Family can tap exactly one waiting point or clear it; no family GPS permission.
 - Treat view token as a secret. Device credential distinct. Server-only service-role key. RLS + server-side authorization + expiration/revocation. No public unrestricted enrollment.

@@ -13,7 +13,7 @@ Use mock coordinates in tests (never personal real-location logs). Test API/web 
 | A05 | Auth isolation | another device/view token cannot access or change session |
 | A06 | Viewer lifecycle | before start inactive; during active shows route; after stop no active live location |
 | A07 | Waiting-point | viewer tap overwrites old point; clear works; next Watch upload response contains new/cleared value |
-| A08 | Boost logic | immediate attempt, target 5s while active, automatically returns to 30s after 60s; repeated press resets 60s |
+| A08 | Boost logic | immediate attempt, target 5s while active, automatically returns to 10s after 60s; repeated press resets 60s |
 | A09 | Network resilience | offline points persisted; reconnect retries; ack removes only accepted points |
 | A10 | Expiry and privacy | expired/revoked token denied, no public SQL read, no secret logs, no-store responses |
 | A11 | Web stale status | >=90s from latest valid measurement shows stale even if batch was recently received |

@@ -27,7 +27,7 @@ struct UploadPolicy: Sendable {
     var failures = 0
     mutating func boost(now: Date) { boostUntil = now.addingTimeInterval(60) }
     func boosted(now: Date) -> Bool { (boostUntil ?? .distantPast) > now }
-    func interval(now: Date) -> TimeInterval { boosted(now: now) ? 5 : 30 }
+    func interval(now: Date) -> TimeInterval { boosted(now: now) ? 5 : 10 }
     func due(now: Date) -> Bool {
         now >= (retryAfter ?? .distantPast) && now.timeIntervalSince(lastAttempt ?? .distantPast) >= interval(now: now)
     }
@@ -53,7 +53,7 @@ struct QueueStore {
     static func acknowledge(_ ids: Set<UUID>, state: inout SavedTracking) {
         state.points.removeAll { ids.contains($0.id) }
     }
-    // Keep newest 2,000 samples (~16h at 30s / ~2.8h at 5s); discard only under documented cap/age/stop policies.
+    // Keep newest 2,000 samples (~5.6h at 10s / ~2.8h at 5s); discard only under documented cap/age/stop policies.
     static func prune(state: inout SavedTracking, now: Date) {
         let count = state.points.count
         state.points.removeAll { now.timeIntervalSince($0.recorded_at) > 7 * 86400 }
